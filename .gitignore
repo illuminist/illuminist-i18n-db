@@ -1,0 +1,6 @@
+.build*
+.npm
+.DS_Store
+project-tap.i18n
+settings.json
+smart.lock
