@@ -62,6 +62,7 @@ var max_document_id = share.max_document_id = 30;
 if (Meteor.isClient) {
   window.test_collections = test_collections;
   window.translations_editing_tests_collection = translations_editing_tests_collection;
+  window.i18n = Meteor.i18n;
 }
 
 const init_collections = function() {
@@ -74,8 +75,7 @@ const init_collections = function() {
     "not_translated_to_aa-AA",
   ];
   _.times(max_document_id, (i) => {//0 1 2 3...
-    _.each(_.keys(test_collections), (collection_name) => {
-      var collection = test_collections[collection_name];
+    _.each(test_collections, (collection, collection_name) => {
       var base_language = collection_name.replace(/(.*_|.*)/, "") || "en";
       var collection_class = collection_name.replace(/_.*/, "");
       if (i % 3 !== collection_classes_map[collection_class]) {
@@ -84,7 +84,8 @@ const init_collections = function() {
       var doc = {
         _id: "" + (share.lpad(i, 4)),
         id: i,
-        i18n: {}
+        i18n: {},
+        baseLang: base_language,
       };
       // init languages subdocuments
       _.each(languages, (language_tag) => {
@@ -95,6 +96,7 @@ const init_collections = function() {
           var not_translated_to = property.replace("not_translated_to_", "");
           var value = property + "^" + language_tag + "-" + i;
           if (language_tag !== not_translated_to) {
+            var set_on;
             if (language_tag === base_language) {
               set_on = doc;
             } else {
@@ -117,11 +119,11 @@ if (Meteor.isServer) {
     }
     var cursors = [];
     if (fields == null) {
-      cursors = cursors.concat(test_collections["" + _class].i18nFind());
+      cursors = cursors.concat(test_collections[_class].i18nFind());
       cursors = cursors.concat(test_collections[_class + "_aa"].i18nFind());
       cursors = cursors.concat(test_collections[_class + "_aa-AA"].i18nFind());
     } else {
-      cursors = cursors.concat(test_collections["" + _class].i18nFind({}, {
+      cursors = cursors.concat(test_collections[_class].i18nFind({}, {
         fields: fields
       }));
       cursors = cursors.concat(test_collections[_class + "_aa"].i18nFind({}, {

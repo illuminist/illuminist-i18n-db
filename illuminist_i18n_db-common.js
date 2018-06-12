@@ -1,4 +1,3 @@
-var indexOf = [].indexOf;
 share = {}; 
 
 globals.supportedLanguages = Meteor.settings.public.supportedLanguages;
@@ -27,14 +26,14 @@ i18nCollection = function(name, options = {}) {
 share.helpers = {};
 
 share.helpers.dialectOf = function(lang) {
-  if ((lang != null) && indexOf.call(lang, "-") >= 0) {
+  if ((lang != null) && _.indexOf(lang, "-") >= 0) {
     return lang.replace(/-.*/, "");
   }
   return null;
 };
 
 share.helpers.removeTrailingUndefs = function(arr) {
-  while ((!_.isEmpty(arr)) && (_.isUndefined(_.last(arr)))) {
+  while (!_.isEmpty(arr) && _.isUndefined(_.last(arr))) {
     arr.pop();
   }
   return arr;
@@ -65,7 +64,7 @@ const commonCollectionExtensions = function(obj) {
   };
 
   const isSupportedLanguage = function(lang, attempted_operation, callback) {
-    if (indexOf.call(Meteor.settings.public.supportedLanguages, lang) >= 0) {
+    if (_.contains(Meteor.settings.public.supportedLanguages, lang)) {
       return;
     }
     throwError(new Meteor.Error(400, `Not supported language: ${lang}`), attempted_operation, callback);
@@ -81,7 +80,7 @@ const commonCollectionExtensions = function(obj) {
     // if no language_tag & isClient, try to get env lang
     if (Meteor.isClient) {
       if (language_tag == null) {
-        language_tag = Meteor.settings.currentLanguage;
+        language_tag = Meteor.i18n.getLanguage();
       }
     }
     if (language_tag != null) {
@@ -144,9 +143,9 @@ const commonCollectionExtensions = function(obj) {
         if (lang === this._base_language) {
           _.extend(updates, translations[lang]);
         } else {
-          _.extend(updates, _.object(_.map(translations[lang], (function(val, field) {
+          _.extend(updates, _.object(_.map(translations[lang], (val, field) => {
             return [`i18n.${lang}.${field}`, val];
-          }))));
+          })));
         }
       }
     }
@@ -251,19 +250,16 @@ const commonCollectionExtensions = function(obj) {
     var callback = void 0;
     var options = void 0;
     var args = _.toArray(arguments);
-    var ref = args.slice(2);
-    for (var i = 0; i < ref.length; i++) {
-      var arg = ref[i];
+    _.each(args.slice(2), arg => {
       if (_.isFunction(arg)) {
         callback = arg;
-        break;
       } else if (_.isObject(arg)) {
         options = arg;
       } else if (_.isUndefined(options) && _.isString(arg)) {
         // language_tag can't come after options
         language_tag = arg;
       }
-    }
+    });
     try {
       language_tag = getLanguageOrEnvLanguage(language_tag, "update", callback);
     } catch (error1) {
@@ -288,29 +284,26 @@ const commonCollectionExtensions = function(obj) {
     var callback = void 0;
     var options = void 0;
     var args = _.toArray(arguments);
-    var ref = args.slice(2);
-    for (var i = 0; i < ref.length; i++) {
-      var arg = ref[i];
+    _.each(args.slice(2), arg => {
       if (_.isFunction(arg)) {
         callback = arg;
-        break;
       } else if (_.isObject(arg)) {
         options = arg;
       } else if (_.isUndefined(options) && _.isString(arg)) {
         // language_tag can't come after options
         language_tag = arg;
       }
-    }
+    });
     try {
       language_tag = getLanguageOrEnvLanguage(language_tag, "remove", callback);
     } catch (error1) {
       return null;
     }
-    if (fields !== null && !_.isArray(fields)) {
+    if (!_.isNull(fields) && !_.isArray(fields)) {
       reportError(new Meteor.Error(400, "fields argument should be an array"), "remove translations", callback);
       return null;
     }
-    if (fields === null) {
+    if (_.isNull(fields)) {
       // remove entire language
       _fields_to_remove = [`${language_tag}`];
     } else {

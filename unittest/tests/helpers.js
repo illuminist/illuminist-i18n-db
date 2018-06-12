@@ -1,5 +1,3 @@
-var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
-
 share = {};
 
 share.lpad = function(value, padding) {
@@ -21,7 +19,7 @@ share.once = function(cb) {
 };
 
 share.dialectOf = function(lang) {
-  if ((lang != null) && __indexOf.call(lang, "-") >= 0) {
+  if ((lang != null) && _.indexOf(lang, "-") >= 0) {
     return lang.replace(/-.*/, "");
   }
   return null;

@@ -1,15 +1,12 @@
 const removeTrailingUndefs = share.helpers.removeTrailingUndefs;
 
 share.i18nCollectionTransform = function(doc, collection) {
-  ref = collection._disabledOnRoutes;
-  for (var i = 0; i < ref.length; i++) {
-    var route = ref[i];
-    if (route.test(window.location.pathname)) {
-      return doc;
-    }
+  if (_.some(collection._disabledOnRoutes, route => route.test(window.location.pathname))){
+    return doc;
   }
+
   const collection_base_language = collection._base_language;
-  var language = Meteor.settings.currentLanguage;
+  var language = Meteor.i18n.getLanguage();
   if ((language == null) || (doc.i18n == null)) {
     delete doc.i18n;
     return doc;
@@ -49,7 +46,7 @@ share.i18nCollectionExtensions = function(obj) {
   }
   obj.forceLangSwitchReactivity = _.once(function() {
     Deps.autorun(function() {
-      return local_session.set("force_lang_switch_reactivity_hook", Meteor.settings.currentLanguage);
+      return local_session.set("force_lang_switch_reactivity_hook", Meteor.i18n.getLanguage());
     });
   });
   obj._disabledOnRoutes = [];
@@ -69,10 +66,10 @@ Meteor.i18nSubscribe = function(name) {
   var params = Array.prototype.slice.call(arguments, 1);
   var callbacks = {};
   if (params.length) {
-    var lastParam = params[params.length - 1];
-    if (typeof lastParam === "function") {
+    var lastParam = _.last(params);
+    if (_.isFunction(lastParam)) {
       callbacks.onReady = params.pop();
-    } else if (lastParam && (typeof lastParam.onReady === "function" || typeof lastParam.onError === "function")) {
+    } else if (lastParam && (_.isFunction(lastParam.onReady) || _.isFunction(lastParam.onError))) {
       callbacks = params.pop();
     }
   }
@@ -99,11 +96,11 @@ Meteor.i18nSubscribe = function(name) {
   var subscription = null;
   var subscription_computation = null;
   const subscribe = function() {
-    // subscription_computation, depends on Meteor.settings.currentLanguage, to
+    // subscription_computation, depends on Meteor.i18n.getLanguage(), to
     // resubscribe once the language gets changed.
     return subscription_computation = Deps.autorun(function() {
       var lang_tag;
-      lang_tag = Meteor.settings.currentLanguage;
+      lang_tag = Meteor.i18n.getLanguage();
       subscription = Meteor.subscribe.apply(this, removeTrailingUndefs([].concat(name, params, lang_tag, callbacks)));
       // if the subscription is already ready: 
       return local_session.set("ready", subscription.ready());
@@ -113,7 +110,7 @@ Meteor.i18nSubscribe = function(name) {
   // behavior (which never gets invalidated), we don't want the computation to
   // get invalidated when TAPi18n.getLanguage get invalidated (when language get
   // changed).
-  var current_computation = Deps.currentComputation;
+  var currentComputation = Deps.currentComputation;
   if (typeof currentComputation !== "undefined" && currentComputation !== null) {
     // If TAPi18n.subscribe was called in a computation, call subscribe in a
     // non-reactive context, but make sure that if the computation is getting
@@ -141,3 +138,27 @@ Meteor.i18nSubscribe = function(name) {
     }
   };
 };
+
+Meteor.i18n = (() => {
+  const langSessionKey = "i18n::currentLanguage"
+
+  const setLanguage = (langTag) => {
+    Session.set(langSessionKey, langTag);
+  }
+
+  const getLanguage = () => {
+    var lang = null;
+    try {
+       lang = Session.get(langSessionKey);
+    } catch(e) {
+
+    } 
+
+    return lang ? lang : globals.fallback_language;
+  }
+
+  return {
+    setLanguage,
+    getLanguage
+  };
+})();

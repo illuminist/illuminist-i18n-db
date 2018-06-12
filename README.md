@@ -71,7 +71,7 @@ Inventors.updateTranslations(id, {
 
 ```
 
-If you are updating from the client, you can use the `translate` method to translate a document to the session's current language. In the following example, we assume that `Meteor.settings.currentLanguage` returns `ru` (Russian):
+If you are updating from the client, you can use the `translate` method to translate a document to the session's current language. In the following example, we assume that `Meteor.i18n.getLanguage()` returns `ru` (Russian):
 
 ```javascript
 Inventors.translate(id, {name: 'Ни́кола Те́сла'});
@@ -231,7 +231,7 @@ use your package without installing and configuring illuminist-i18n.
 
 To change client language, use
 ```javascript
-Meteor.settings.currentLanguage = <new_language>;
+Meteor.i18n.setLanguage(<new_language>);
 ```
 
 ### illuminist-i18n-db Collections
@@ -377,7 +377,7 @@ i18n_col.removeTranslations(_id, ["en.a", "aa.y", "aa-AA"]);
 // -> result: {b: 2, i18n: {aa: {x: 1}}, _id: _id}
 ```
 
-**i18n_collection.insertLanguage(doc, language_translations, [language_tag=Meteor.settings.currentLanguage], [callback])** *Client*
+**i18n_collection.insertLanguage(doc, language_translations, [language_tag=Meteor.i18n.getLanguage()], [callback])** *Client*
 **i18n_collection.insertLanguage(doc, language_translations, language_tag, [callback])** *Server*
 
 Insert a document into the collection with translations to the specified
@@ -396,7 +396,7 @@ language_tag. Returns its unique _id.
 ```
 
 *language_tag* is by default the current client's language or one of the
-supported languages tags, if no language is set (Meteor.settings.currentLanguage is
+supported languages tags, if no language is set (Meteor.i18n.getLanguage() is
 null) you must set the language_tag yourself. On the server you must specify
 *language_tag*.
 
@@ -420,14 +420,14 @@ i18n_col.insertLanguage({a: 1, b: 5}, {b: 2, d: 4}, "ru");
 // -> will insert: {a: 1, b: 2, d: 4, _id: _id}
 
 // only client side
-Meteor.settings.currentLanguage = "zh";
+Meteor.i18n.setLanguage("zh");
   .done(function () {
     i18n_col.insertLanguage({a: 1, b: 5}, {b: 2, d: 4});
     // -> will insert: {a: 1, b: 5, i18n: {zh: {b: 2, d: 4}}, _id: _id}
   });
 ```
 
-**i18n_collection.updateLanguage(selector, language_translations, [language_tag=Meteor.settings.currentLanguage], [options], [callback])** *Client*
+**i18n_collection.updateLanguage(selector, language_translations, [language_tag=Meteor.i18n.getLanguage()], [options], [callback])** *Client*
 **i18n_collection.updateLanguage(selector, language_translations, language_tag, [options], [callback])** *Server*
 
 *Alias: i18n_colllection.translate*
@@ -444,13 +444,13 @@ The *selector*, *options* and *callback* arguments are just like in
 Example:
 
 ```javascript
-Meteor.settings.currentLanguage = "aa";
+Meteor.i18n.setLanguage("aa");
 _id = i18n_col.insertTranslations({a: 1, b: 2}, {aa: {x: 9, y: 2, z: 1}})
 i18n_col.updateLanguage(_id, {x: 1, z: 3});
 // -> result: {a: 1, b: 2, i18n: {aa: {x: 1, y: 2, z: 3}}, _id: _id}
 ```
 
-**i18n_collection.removeLanguage(selector, fields, [language_tag=Meteor.settings.currentLanguage], [options], [callback])** *Client*
+**i18n_collection.removeLanguage(selector, fields, [language_tag=Meteor.i18n.getLanguage()], [options], [callback])** *Client*
 **i18n_collection.removeLanguage(selector, fields, language_tag, [options], [callback])** *Server*
 
 Remove *language_tag*'s translations from the selected documents. Returns the
@@ -481,7 +481,7 @@ like [collection.update()](http://docs.meteor.com/#update)
 Example:
 
 ```javascript
-Meteor.settings.currentLanguage = "aa";
+Meteor.i18n.setLanguage("aa");
 // remove some translations of language aa
 _id = i18n_col.insertTranslations({a: 1, b: 2}, {aa: {x: 1, y: 2, z: 3}})
 i18n_col.removeLanguage(_id, ["x", "z"]);
