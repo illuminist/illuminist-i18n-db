@@ -1,5 +1,5 @@
 const removeTrailingUndefs = share.helpers.removeTrailingUndefs;
-
+window._ = _
 share.i18nCollectionTransform = function(doc, collection) {
   if (_.some(collection._disabledOnRoutes, route => route.test(window.location.pathname))){
     return doc;
@@ -13,20 +13,47 @@ share.i18nCollectionTransform = function(doc, collection) {
   }
   const dialect_of = share.helpers.dialectOf(language);
   doc = $.extend({}, doc); // protect original object
-  if ((dialect_of != null) && (doc.i18n[dialect_of] != null)) {
-    if (language !== collection_base_language) {
-      $.extend(true, doc, doc.i18n[dialect_of]);
-    } else {
-      // if the collection's base language is the dialect that is used as the
-      // current language
-      doc = $.extend(true, {}, doc.i18n[dialect_of], doc);
+
+  const transformObject = doc => {
+    var ret = {};
+
+    if(_.isArray(doc)){
+      ret = _.map(doc, transformObject);
+    }else if(_.isObject(doc)){
+      _.each(doc, (doc, key) => {
+        if(key == 'i18n'){
+          return;
+        }
+        if(_.isObject(doc)){
+          ret[key] = transformObject(doc); 
+        }else{
+          ret[key] = doc;
+        }
+      });
+
+      if(_.isObject(doc.i18n)) {
+        if ((dialect_of != null) && (doc.i18n[dialect_of] != null)) {
+          if (language !== collection_base_language) {
+            ret = _.extend(ret, doc.i18n[dialect_of]);
+          } else {
+            // if the collection's base language is the dialect that is used as the
+            // current language
+            ret = _.extend(doc.i18n[dialect_of], doc);
+          }
+        }
+  
+        if (doc.i18n[language] != null) {
+          ret = _.extend(ret, doc.i18n[language]);
+        }
+        delete ret.i18n;
+      }
+    }else{
+      ret = doc;
     }
+    return ret;
   }
-  if (doc.i18n[language] != null) {
-    $.extend(true, doc, doc.i18n[language]);
-  }
-  delete doc.i18n;
-  return doc;
+
+  return transformObject(doc);
 };
 
 share.i18nCollectionExtensions = function(obj) {

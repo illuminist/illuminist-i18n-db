@@ -1,5 +1,3 @@
-
-
 var test_collections = share.test_collections = {
   a        : new i18nCollection("a"),
   b        : new i18nCollection("b"),
@@ -85,28 +83,35 @@ const init_collections = function() {
         _id: "" + (share.lpad(i, 4)),
         id: i,
         i18n: {},
+        nested: {
+          i18n: {},
+        },
         baseLang: base_language,
       };
       // init languages subdocuments
       _.each(languages, (language_tag) => {
         if(language_tag !== base_language) {
           doc.i18n[language_tag] = {};
+          doc.nested.i18n[language_tag] = {};
         }
         _.each(properties_to_translate, (property) => {
           var not_translated_to = property.replace("not_translated_to_", "");
           var value = property + "^" + language_tag + "-" + i;
           if (language_tag !== not_translated_to) {
-            var set_on;
+            var set_on, set_on_nested;
             if (language_tag === base_language) {
               set_on = doc;
+              set_on_nested = doc.nested;
             } else {
               set_on = doc.i18n[language_tag];
+              set_on_nested = doc.nested.i18n[language_tag];
             }
             set_on[property] = value;
+            set_on_nested[property] = value;
           }
         });
       });
-      collection.insert(doc);
+      collection.insert(doc); console.log(doc)
     });
   });
 };

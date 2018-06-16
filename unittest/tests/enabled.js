@@ -906,11 +906,33 @@ if (Meteor.isClient) {
   if (Package.autopublish == null) {
     Tinytest.addAsync('illuminist-i18n-db - reactivity test - complex subscription', (test, onComplete) => {
       stop_all_subscriptions();
-      Meteor.i18n.setLanguage(supportedLanguages[0]);
+      
       var fields_to_exclude = ["not_translated_to_en", "not_translated_to_aa", "not_translated_to_aa-AA"];
+      var testCases = [];
+      _.each(supportedLanguages, language => 
+        _.each(fields_to_exclude, field_to_exclude =>
+          _.times(2, projection_type=>
+            testCases.push({
+              projection_type:projection_type,
+              field_to_exclude:field_to_exclude,
+              language:language,
+            })
+          )
+        )
+      );
       var local_session = new ReactiveDict();
-      local_session.set("field_to_exclude", fields_to_exclude[0]);
-      local_session.set("projection_type", 0);
+
+      const shiftTest = ()=>{
+        var oneTest = testCases.shift()
+        if(oneTest){
+          local_session.set("field_to_exclude", oneTest.field_to_exclude);
+          local_session.set("projection_type", oneTest.projection_type);
+          Meteor.i18n.setLanguage(oneTest.language);
+        }
+        return oneTest;
+      }
+      shiftTest();
+
       var fields = null;
       var subscriptions = null;
       Deps.autorun(() => {
@@ -955,35 +977,31 @@ if (Meteor.isClient) {
         });
         return subscriptions = [[subscription_a, subscription_b, subscription_c], [a_dfd, b_dfd, c_dfd]];
       });
-      var interval_handle;
       var last_invalidation = null;
       var documents = null;
       var comp = Deps.autorun(() => {
         documents = get_all_docs();
         return last_invalidation = share.now();
       });
-      return interval_handle = Meteor.setInterval((() => {
-        var lang_id, projection_id;
+      var s = [];
+      var interval_handle = Meteor.setInterval((() => {
         if (last_invalidation + idle_time < share.now()) {
           console.log(`Testing complex subscriptions' reactivity: language=${Meteor.i18n.getLanguage()}; field_to_exclude=${local_session.get("field_to_exclude")}; projection_type=${local_session.get("projection_type") ? "inclusive" : "exclusive"}; projection=${EJSON.stringify(fields)}`);
+          s.push({
+            projection_type:local_session.get("projection_type"),
+            field_to_exclude:local_session.get("field_to_exclude"),
+            language:Meteor.i18n.getLanguage(),
+          })
         }
         general_tests(test, subscriptions, documents);
         documents.all.forEach((doc) => {
-          return test.isUndefined(doc[local_session.get("field_to_exclude")], `field_to_exclude=${local_session.get("field_to_exclude")}; projection_type=${local_session.get("projection_type") ? "inclusive" : "exclusive"}; projection=${EJSON.stringify(fields)}`);
+          test.isUndefined(doc[local_session.get("field_to_exclude")], `field_to_exclude=${local_session.get("field_to_exclude")}; projection_type=${local_session.get("projection_type") ? "inclusive" : "exclusive"}; projection=${EJSON.stringify(fields)}`);
         });
-        if (local_session.get("projection_type") === 0) {
-          return local_session.set("projection_type", 1);
-        } else if (local_session.get("projection_type") === 1 && ((projection_id = fields_to_exclude.indexOf(local_session.get("field_to_exclude"))) + 1) < fields_to_exclude.length) {
-          local_session.set("projection_type", 0);
-          return local_session.set("field_to_exclude", fields_to_exclude[projection_id + 1]);
-        } else if ((lang_id = supportedLanguages.indexOf(Meteor.i18n.getLanguage())) + 1 < supportedLanguages.length) {
-          Meteor.i18n.setLanguage(supportedLanguages[lang_id + 1]);
-          local_session.set("projection_type", 0);
-          return local_session.set("field_to_exclude", fields_to_exclude[0]);
-        } else {
+        if (!shiftTest()) {
           comp.stop();
           Meteor.clearInterval(interval_handle);
-          return onComplete();
+          console.log(s)
+          onComplete();
         }
       }), idle_time);
     });
