@@ -73,7 +73,8 @@ Package.on_test(function (api) {
   // DO NOT ADD THIS Package.on_test TO GIT!!!
   // DO NOT ADD THIS Package.on_test TO GIT!!!
   //
-  api.use(['ejson', 'underscore', "deps", 'tinytest', 'test-helpers', 'templating', 'jquery', "reactive-dict"], ['client', 'server']);
+
+  api.use(['underscore', 'ejson', 'deps', 'tinytest', 'test-helpers', 'templating', 'jquery', 'reactive-dict'], ['client', 'server']);
   api.use(['session'], ['client']);
   $test_specific
 
