@@ -29,7 +29,7 @@ Originally Developed by <a href="http://www.meteorspark.com"><img src="http://ww
 ```bash
 <project-root>/$ mkdir packages
 <project-root>/$ cd packages
-<project-root>/packages/$ git clone https://github.com/illuminist/illuminist-i18n-db/
+<project-root>/packages/$ git clone https://gitlab.com/illuminist/illuminist-i18n-db.git
 ```
 
 **Step 2:** Add illuminist:i18n-db to your meteor project:
