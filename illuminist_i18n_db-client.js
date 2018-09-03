@@ -12,7 +12,7 @@ share.i18nCollectionTransform = function(doc, collection) {
     return doc;
   }
   const dialect_of = share.helpers.dialectOf(language);
-  doc = $.extend({}, doc); // protect original object
+  doc = {...doc}; // protect original object
 
   const transformObject = doc => {
     var ret = {};
@@ -24,13 +24,14 @@ share.i18nCollectionTransform = function(doc, collection) {
         if(key == 'i18n'){
           return;
         }
-        if(_.isObject(doc)){
+        if(_.isDate(doc)){
+          ret[key] = doc;
+        }else if(_.isObject(doc)){
           ret[key] = transformObject(doc); 
         }else{
           ret[key] = doc;
         }
       });
-
       if(_.isObject(doc.i18n)) {
         if ((dialect_of != null) && (doc.i18n[dialect_of] != null)) {
           if (language !== collection_base_language) {
@@ -52,7 +53,6 @@ share.i18nCollectionTransform = function(doc, collection) {
     }
     return ret;
   }
-
   return transformObject(doc);
 };
 
