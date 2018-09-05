@@ -1,6 +1,8 @@
+import globals from './globals';
+import { dialectOf, commonCollectionExtensions } from './illuminist_i18n_db-common';
 const Fiber = Npm.require('fibers');
 
-share.i18nCollectionExtensions = function(obj) {
+export const i18nCollectionExtensions = function(obj) {
   obj.i18nFind = function(selector, options) {
 
     var lang;
@@ -13,7 +15,7 @@ share.i18nCollectionExtensions = function(obj) {
       selector = {};
     }
 
-    var dialect_of = share.helpers.dialectOf(current_language);
+    var dialect_of = dialectOf(current_language);
     var collection_base_language = this._base_language;
     var supported_languages = Meteor.settings.public.supportedLanguages;
 
@@ -127,4 +129,13 @@ Meteor.i18nPublish = function(name, handler, options) {
   };
   // set the actual publish method
   return Meteor.publish(name, i18n_handler, options);
+};
+
+export const i18nCollection = function(name, options = {}) {
+  var collection;
+  
+  collection = i18nCollectionExtensions(commonCollectionExtensions(new Meteor.Collection(name, options)));
+
+  collection._base_language = "base_language" in options ? options["base_language"] : globals.fallback_language;
+  return collection;
 };

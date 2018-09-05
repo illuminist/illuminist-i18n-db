@@ -1,47 +1,23 @@
-share = {}; 
+import globals from './globals';
+import { i18nCollectionExtensions } from './illuminist_i18n_db-client.js';
 
 globals.supportedLanguages = Meteor.settings.public.supportedLanguages;
 
-i18nCollection = function(name, options = {}) {
-  var collection, original_transform;
-  // Set the transform option
-  if (Meteor.isClient) {
-    original_transform = options.transform || function(doc) {
-      return doc;
-    };
-    options.transform = function(doc) {
-      return share.i18nCollectionTransform(original_transform(doc), collection);
-    };
-  }
-  collection = share.i18nCollectionExtensions(commonCollectionExtensions(new Meteor.Collection(name, options)));
-  if (Meteor.isClient) {
-    if (Package["yogiben:admin"] != null) {
-      collection._disableTransformationOnRoute(/^\/admin(\/?$|\/)/);
-    }
-  }
-  collection._base_language = "base_language" in options ? options["base_language"] : globals.fallback_language;
-  return collection;
-};
-
-share.helpers = {};
-
-share.helpers.dialectOf = function(lang) {
+export const dialectOf = function(lang) {
   if ((lang != null) && _.indexOf(lang, "-") >= 0) {
     return lang.replace(/-.*/, "");
   }
   return null;
 };
 
-share.helpers.removeTrailingUndefs = function(arr) {
+export const removeTrailingUndefs = function(arr) {
   while (!_.isEmpty(arr) && _.isUndefined(_.last(arr))) {
     arr.pop();
   }
   return arr;
 };
 
-const removeTrailingUndefs = share.helpers.removeTrailingUndefs;
-
-const commonCollectionExtensions = function(obj) {
+export const commonCollectionExtensions = function(obj) {
 
   const reportError = function(error, attempted_operation, callback) {
     if (_.isFunction(callback)) {
@@ -316,3 +292,4 @@ const commonCollectionExtensions = function(obj) {
   return obj;
 
 };
+

@@ -1,4 +1,10 @@
-var test_collections = share.test_collections = {
+import { i18nCollection } from 'meteor/illuminist:i18n-db';
+
+import { lpad } from './helpers';
+
+export const maxDocumentId = 30;
+
+export const testCollections = {
   a        : new i18nCollection("a"),
   b        : new i18nCollection("b"),
   c        : new i18nCollection("c"),
@@ -21,9 +27,10 @@ var test_collections = share.test_collections = {
     base_language: "aa-AA"
   }),
 };
-var translations_editing_tests_collection = new i18nCollection("trans_editing");
 
-translations_editing_tests_collection.allow({
+export const translationsEditingTestsCollection = new i18nCollection("trans_editing");
+
+translationsEditingTestsCollection.allow({
   insert: () => true,
   update: () => true,
   remove: () => true,
@@ -31,15 +38,13 @@ translations_editing_tests_collection.allow({
 
 if (Meteor.isServer) {
   Meteor.publish("trans_editing", function() {
-    return translations_editing_tests_collection.find({});
+    return translationsEditingTestsCollection.find({});
   });
 } else {
   Meteor.subscribe("trans_editing");
 }
 
-share.translations_editing_tests_collection = translations_editing_tests_collection;
-
-_.each(test_collections,(collection)=>{
+_.each(testCollections,(collection)=>{
   collection.allow({
     insert: () => true,
     update: () => true,
@@ -53,18 +58,17 @@ var collection_classes_map = {
   c: 2
 };
 
-var languages = share.supported_languages = ["en", "aa", "aa-AA"];
+var languages = ["en", "aa", "aa-AA"];
 
-var max_document_id = share.max_document_id = 30;
 
 if (Meteor.isClient) {
-  window.test_collections = test_collections;
-  window.translations_editing_tests_collection = translations_editing_tests_collection;
+  window.testCollections = testCollections;
+  window.translationsEditingTestsCollection = translationsEditingTestsCollection;
   window.i18n = Meteor.i18n;
 }
 
 const init_collections = function() {
-  _.each(test_collections, (collection) => {
+  _.each(testCollections, (collection) => {
     collection.remove({});
   });
   var properties_to_translate = [
@@ -72,15 +76,15 @@ const init_collections = function() {
     "not_translated_to_aa", 
     "not_translated_to_aa-AA",
   ];
-  _.times(max_document_id, (i) => {//0 1 2 3...
-    _.each(test_collections, (collection, collection_name) => {
+  _.times(maxDocumentId, (i) => {//0 1 2 3...
+    _.each(testCollections, (collection, collection_name) => {
       var base_language = collection_name.replace(/(.*_|.*)/, "") || "en";
       var collection_class = collection_name.replace(/_.*/, "");
       if (i % 3 !== collection_classes_map[collection_class]) {
         return;
       }
       var doc = {
-        _id: "" + (share.lpad(i, 4)),
+        _id: "" + (lpad(i, 4)),
         id: i,
         i18n: {},
         nested: {
@@ -124,17 +128,17 @@ if (Meteor.isServer) {
     }
     var cursors = [];
     if (fields == null) {
-      cursors = cursors.concat(test_collections[_class].i18nFind());
-      cursors = cursors.concat(test_collections[_class + "_aa"].i18nFind());
-      cursors = cursors.concat(test_collections[_class + "_aa-AA"].i18nFind());
+      cursors = cursors.concat(testCollections[_class].i18nFind());
+      cursors = cursors.concat(testCollections[_class + "_aa"].i18nFind());
+      cursors = cursors.concat(testCollections[_class + "_aa-AA"].i18nFind());
     } else {
-      cursors = cursors.concat(test_collections[_class].i18nFind({}, {
+      cursors = cursors.concat(testCollections[_class].i18nFind({}, {
         fields: fields
       }));
-      cursors = cursors.concat(test_collections[_class + "_aa"].i18nFind({}, {
+      cursors = cursors.concat(testCollections[_class + "_aa"].i18nFind({}, {
         fields: fields
       }));
-      cursors = cursors.concat(test_collections[_class + "_aa-AA"].i18nFind({}, {
+      cursors = cursors.concat(testCollections[_class + "_aa-AA"].i18nFind({}, {
         fields: fields
       }));
     }

@@ -1,11 +1,10 @@
-var test_collections = share.test_collections;
-
-var translations_editing_tests_collection = share.translations_editing_tests_collection;
+import { testCollections, translationsEditingTestsCollection, maxDocumentId } from './common';
+import { dialectOf, now } from './helpers';
 
 var idle_time = 2000;
 
 Tinytest.add('illuminist-i18n-db - translations editing - insertTranslations - valid test', (test) => {
-  var _id = translations_editing_tests_collection.insertTranslations({
+  var _id = translationsEditingTestsCollection.insertTranslations({
     a: 1,
     b: 5
   }, {
@@ -17,7 +16,7 @@ Tinytest.add('illuminist-i18n-db - translations editing - insertTranslations - v
       d: 4
     }
   });
-  return test.equal(translations_editing_tests_collection.findOne(_id, {
+  return test.equal(translationsEditingTestsCollection.findOne(_id, {
     transform: null
   }), {
     a: 1,
@@ -33,11 +32,11 @@ Tinytest.add('illuminist-i18n-db - translations editing - insertTranslations - v
 });
 
 Tinytest.add('illuminist-i18n-db - translations editing - insertTranslations - no translations', (test) => {
-  var _id = translations_editing_tests_collection.insertTranslations({
+  var _id = translationsEditingTestsCollection.insertTranslations({
     a: 1,
     b: 2
   });
-  return test.equal(translations_editing_tests_collection.findOne(_id, {
+  return test.equal(translationsEditingTestsCollection.findOne(_id, {
     transform: null
   }), {
     a: 1,
@@ -48,7 +47,7 @@ Tinytest.add('illuminist-i18n-db - translations editing - insertTranslations - n
 
 Tinytest.addAsync('illuminist-i18n-db - translations editing - insertTranslations - unsupported lang', (test, onComplete) => {
   var result;
-  result = translations_editing_tests_collection.insertTranslations({
+  result = translationsEditingTestsCollection.insertTranslations({
     a: 1,
     b: 2
   }, {
@@ -65,14 +64,14 @@ Tinytest.addAsync('illuminist-i18n-db - translations editing - insertTranslation
 });
 
 Tinytest.addAsync('illuminist-i18n-db - translations editing - insertLanguage - language: collection\'s base language', (test, onComplete) => {
-  return translations_editing_tests_collection.insertLanguage({
+  return translationsEditingTestsCollection.insertLanguage({
     a: 1,
     b: 5
   }, {
     b: 2,
     d: 4
   }, "en", (err, id) => {
-    test.equal(translations_editing_tests_collection.findOne(id, {
+    test.equal(translationsEditingTestsCollection.findOne(id, {
       transform: null
     }), {
       a: 1,
@@ -85,14 +84,14 @@ Tinytest.addAsync('illuminist-i18n-db - translations editing - insertLanguage - 
 });
 
 Tinytest.add('illuminist-i18n-db - translations editing - insertLanguage - language: not collection\'s base language', (test) => {
-  var _id = translations_editing_tests_collection.insertLanguage({
+  var _id = translationsEditingTestsCollection.insertLanguage({
     a: 1,
     b: 5
   }, {
     b: 2,
     d: 4
   }, "aa");
-  return test.equal(translations_editing_tests_collection.findOne(_id, {
+  return test.equal(translationsEditingTestsCollection.findOne(_id, {
     transform: null
   }), {
     a: 1,
@@ -109,7 +108,7 @@ Tinytest.add('illuminist-i18n-db - translations editing - insertLanguage - langu
 
 Tinytest.addAsync('illuminist-i18n-db - translations editing - insertLanguage - language: not supported language', (test, onComplete) => {
   var result;
-  return result = translations_editing_tests_collection.insertLanguage({
+  return result = translationsEditingTestsCollection.insertLanguage({
     a: 1,
     b: 5
   }, {
@@ -127,7 +126,7 @@ Tinytest.addAsync('illuminist-i18n-db - translations editing - insertLanguage - 
 if(Meteor.isServer){ // In client, if language_tag not specified it will use fallback language eg "en"
   Tinytest.addAsync('illuminist-i18n-db - translations editing - insertLanguage - language: not specified', (test, onComplete) => {
     var result;
-    return result = translations_editing_tests_collection.insertLanguage({
+    return result = translationsEditingTestsCollection.insertLanguage({
       a: 1,
       b: 5
     }, {
@@ -144,7 +143,7 @@ if(Meteor.isServer){ // In client, if language_tag not specified it will use fal
 }
 
 Tinytest.addAsync('illuminist-i18n-db - translations editing - updateTranslations - valid update', (test, onComplete) => {
-  var _id = translations_editing_tests_collection.insertTranslations({
+  var _id = translationsEditingTestsCollection.insertTranslations({
     a: 5,
     b: 6
   }, {
@@ -157,7 +156,7 @@ Tinytest.addAsync('illuminist-i18n-db - translations editing - updateTranslation
       m: 2
     }
   });
-  var result = translations_editing_tests_collection.updateTranslations(_id, {
+  var result = translationsEditingTestsCollection.updateTranslations(_id, {
     en: {
       a: 1
     },
@@ -165,7 +164,7 @@ Tinytest.addAsync('illuminist-i18n-db - translations editing - updateTranslation
       x: 1
     }
   });
-  result = translations_editing_tests_collection.updateTranslations(_id, {
+  result = translationsEditingTestsCollection.updateTranslations(_id, {
     en: {
       b: 2,
       c: 3
@@ -179,7 +178,7 @@ Tinytest.addAsync('illuminist-i18n-db - translations editing - updateTranslation
     }
   });
   test.equal(result, 1, "Correct number of affected documents");
-  test.equal(translations_editing_tests_collection.findOne(_id, {
+  test.equal(translationsEditingTestsCollection.findOne(_id, {
     transform: null
   }), {
     a: 1,
@@ -203,7 +202,7 @@ Tinytest.addAsync('illuminist-i18n-db - translations editing - updateTranslation
 });
 
 Tinytest.addAsync('illuminist-i18n-db - translations editing - updateTranslations - empty update', (test, onComplete) => {
-  var _id = translations_editing_tests_collection.insertTranslations({
+  var _id = translationsEditingTestsCollection.insertTranslations({
     a: 1
   }, {
     aa: {
@@ -211,11 +210,11 @@ Tinytest.addAsync('illuminist-i18n-db - translations editing - updateTranslation
     }
   });
   // After 2014 version of mongodb, empty modifier wasn't allowed anymore
-  translations_editing_tests_collection.updateTranslations(_id,{},(err, affected_rows) => {
+  translationsEditingTestsCollection.updateTranslations(_id,{},(err, affected_rows) => {
     test.instanceOf(err, Meteor.Error);
     test.isUndefined(affected_rows);
     if(err) test.equal(err.reason, "Modifier is empty");
-    test.equal(translations_editing_tests_collection.findOne(_id, {
+    test.equal(translationsEditingTestsCollection.findOne(_id, {
       transform: null
     }), {
       a: 1,
@@ -231,7 +230,7 @@ Tinytest.addAsync('illuminist-i18n-db - translations editing - updateTranslation
 });
 
 Tinytest.addAsync('illuminist-i18n-db - translations editing - updateTranslations - unsupported lang', (test, onComplete) => {
-  var _id = translations_editing_tests_collection.insertTranslations({
+  var _id = translationsEditingTestsCollection.insertTranslations({
     a: 1
   }, {
     aa: {
@@ -239,7 +238,7 @@ Tinytest.addAsync('illuminist-i18n-db - translations editing - updateTranslation
     }
   });
   var result;
-  return result = translations_editing_tests_collection.updateTranslations(_id, {
+  return result = translationsEditingTestsCollection.updateTranslations(_id, {
     ru: {
       c: 3
     }
@@ -254,7 +253,7 @@ Tinytest.addAsync('illuminist-i18n-db - translations editing - updateTranslation
 
 Tinytest.addAsync('illuminist-i18n-db - translations editing - translate - valid update', (test, onComplete) => {
   var result;
-  var _id = translations_editing_tests_collection.insertTranslations({
+  var _id = translationsEditingTestsCollection.insertTranslations({
     a: 5,
     b: 2
   }, {
@@ -263,24 +262,24 @@ Tinytest.addAsync('illuminist-i18n-db - translations editing - translate - valid
       y: 2
     }
   });
-  result = translations_editing_tests_collection.translate(_id, {
+  result = translationsEditingTestsCollection.translate(_id, {
     a: 1,
     c: 3
   }, "en");
   test.equal(result, 1, "Correct number of affected documents");
-  result = translations_editing_tests_collection.translate(_id, {
+  result = translationsEditingTestsCollection.translate(_id, {
     x: 1,
     z: 3
   }, "aa", {});
   test.equal(result, 1, "Correct number of affected documents");
-  return result = translations_editing_tests_collection.translate(_id, {
+  return result = translationsEditingTestsCollection.translate(_id, {
     l: 1,
     m: 2,
     n: 3
   }, "aa-AA", {}, (err, affected_rows) => {
     return Meteor.setTimeout((() => {
       test.equal(affected_rows, 1); 
-      test.equal(translations_editing_tests_collection.findOne(_id, {
+      test.equal(translationsEditingTestsCollection.findOne(_id, {
         transform: null
       }), {
         a: 1,
@@ -307,7 +306,7 @@ Tinytest.addAsync('illuminist-i18n-db - translations editing - translate - valid
 
 Tinytest.add('illuminist-i18n-db - translations editing - remove translation - valid remove', (test) => {
   var result;
-  var _id = translations_editing_tests_collection.insertTranslations({
+  var _id = translationsEditingTestsCollection.insertTranslations({
     a: 1,
     b: 2
   }, {
@@ -320,14 +319,14 @@ Tinytest.add('illuminist-i18n-db - translations editing - remove translation - v
       m: 2
     }
   });
-  result = translations_editing_tests_collection.removeTranslations(_id, ["en.a", "aa.y", "aa-AA"]);
+  result = translationsEditingTestsCollection.removeTranslations(_id, ["en.a", "aa.y", "aa-AA"]);
   test.equal(result, 1, "Correct number of affected documents");
-  translations_editing_tests_collection.removeTranslations(_id, [], {}, (err, affected_rows) => {
+  translationsEditingTestsCollection.removeTranslations(_id, [], {}, (err, affected_rows) => {
     test.isUndefined(affected_rows);
     test.instanceOf(err, Meteor.Error);
     if(err) test.equal(err.reason, "Modifier is empty");
   });
-  return test.equal(translations_editing_tests_collection.findOne(_id, {
+  return test.equal(translationsEditingTestsCollection.findOne(_id, {
     transform: null
   }), {
     b: 2,
@@ -342,7 +341,7 @@ Tinytest.add('illuminist-i18n-db - translations editing - remove translation - v
 
 Tinytest.addAsync('illuminist-i18n-db - translations editing - remove translation - attempt to remove base language', (test, onComplete) => {
   var result;
-  var _id = translations_editing_tests_collection.insertTranslations({
+  var _id = translationsEditingTestsCollection.insertTranslations({
     a: 1,
     b: 2
   }, {
@@ -355,7 +354,7 @@ Tinytest.addAsync('illuminist-i18n-db - translations editing - remove translatio
       m: 2
     }
   });
-  return result = translations_editing_tests_collection.removeTranslations(_id, ["en"], (err, affected_rows) => {
+  return result = translationsEditingTestsCollection.removeTranslations(_id, ["en"], (err, affected_rows) => {
     test.isUndefined(affected_rows);
     test.instanceOf(err, Meteor.Error);
     if(err) test.equal(err.reason, "Complete removal of collection's base language from a document is not permitted");
@@ -366,7 +365,7 @@ Tinytest.addAsync('illuminist-i18n-db - translations editing - remove translatio
 
 Tinytest.addAsync('illuminist-i18n-db - translations editing - remove translation - fields argument is not an array', (test, onComplete) => {
   var result;
-  var _id = translations_editing_tests_collection.insertTranslations({
+  var _id = translationsEditingTestsCollection.insertTranslations({
     a: 1,
     b: 2
   }, {
@@ -379,7 +378,7 @@ Tinytest.addAsync('illuminist-i18n-db - translations editing - remove translatio
       m: 2
     }
   });
-  return result = translations_editing_tests_collection.removeTranslations(_id, {}, (err, affected_rows) => {
+  return result = translationsEditingTestsCollection.removeTranslations(_id, {}, (err, affected_rows) => {
     test.isUndefined(affected_rows);
     test.instanceOf(err, Meteor.Error);
     test.isNull(result);
@@ -389,7 +388,7 @@ Tinytest.addAsync('illuminist-i18n-db - translations editing - remove translatio
 
 Tinytest.addAsync('illuminist-i18n-db - translations editing - remove language - valid remove', (test, onComplete) => {
   var result;
-  var _id = translations_editing_tests_collection.insertTranslations({
+  var _id = translationsEditingTestsCollection.insertTranslations({
     a: 1,
     b: 2,
     c: 3
@@ -403,20 +402,20 @@ Tinytest.addAsync('illuminist-i18n-db - translations editing - remove language -
       m: 2
     }
   });
-  result = translations_editing_tests_collection.removeLanguage(_id, ["a", "c"], "en");
+  result = translationsEditingTestsCollection.removeLanguage(_id, ["a", "c"], "en");
   test.equal(result, 1, "Correct number of affected documents");
-  result = translations_editing_tests_collection.removeLanguage(_id, ["x"], "aa", {}, (err, affected_rows) => {
+  result = translationsEditingTestsCollection.removeLanguage(_id, ["x"], "aa", {}, (err, affected_rows) => {
     test.equal(affected_rows, 1, "Correct number of affected documents");
   });
-  translations_editing_tests_collection.removeLanguage(_id, [], "aa", (err, affected_rows) => {
+  translationsEditingTestsCollection.removeLanguage(_id, [], "aa", (err, affected_rows) => {
     test.instanceOf(err, Meteor.Error);
     test.isUndefined(affected_rows);
     if(err) test.equal(err.reason, "Modifier is empty");
   });
-  return result = translations_editing_tests_collection.removeLanguage(_id, null, "aa-AA", (err, affected_rows) => {
+  return result = translationsEditingTestsCollection.removeLanguage(_id, null, "aa-AA", (err, affected_rows) => {
     return Meteor.setTimeout((() => {
       test.equal(affected_rows, 1, "Correct number of affected documents");
-      test.equal(translations_editing_tests_collection.findOne(_id, {
+      test.equal(translationsEditingTestsCollection.findOne(_id, {
         transform: null
       }), {
         b: 2,
@@ -433,7 +432,7 @@ Tinytest.addAsync('illuminist-i18n-db - translations editing - remove language -
 });
 
 Tinytest.addAsync('illuminist-i18n-db - translations editing - remove language - attempt to remove base language', (test, onComplete) => {
-  var _id = translations_editing_tests_collection.insertTranslations({
+  var _id = translationsEditingTestsCollection.insertTranslations({
     a: 1,
     b: 2,
     c: 3
@@ -447,7 +446,7 @@ Tinytest.addAsync('illuminist-i18n-db - translations editing - remove language -
       m: 2
     }
   });
-  return translations_editing_tests_collection.removeLanguage(_id, null, "en", (err, affected_rows) => {
+  return translationsEditingTestsCollection.removeLanguage(_id, null, "en", (err, affected_rows) => {
     return Meteor.setTimeout((() => {
       test.isUndefined(affected_rows);
       test.instanceOf(err, Meteor.Error);
@@ -459,7 +458,7 @@ Tinytest.addAsync('illuminist-i18n-db - translations editing - remove language -
 
 Tinytest.addAsync('illuminist-i18n-db - translations editing - remove language - fields argument is not an array', (test, onComplete) => {
   var result;
-  var _id = translations_editing_tests_collection.insertTranslations({
+  var _id = translationsEditingTestsCollection.insertTranslations({
     a: 1,
     b: 2
   }, {
@@ -472,7 +471,7 @@ Tinytest.addAsync('illuminist-i18n-db - translations editing - remove language -
       m: 2
     }
   });
-  return result = translations_editing_tests_collection.removeLanguage(_id, {}, "aa", (err, affected_rows) => {
+  return result = translationsEditingTestsCollection.removeLanguage(_id, {}, "aa", (err, affected_rows) => {
     test.isUndefined(affected_rows);
     test.instanceOf(err, Meteor.Error);
     test.isNull(result);
@@ -483,7 +482,7 @@ Tinytest.addAsync('illuminist-i18n-db - translations editing - remove language -
 if (Meteor.isServer) {
   Tinytest.add('illuminist-i18n-db - i18nCollection.i18nFind works only from Meteor.i18nPublish', (test) => {
     return test.throws((() => {
-      return test_collections.a.i18nFind();
+      return testCollections.a.i18nFind();
     }), "i18nCollection.i18nFind should be called only from Meteor.i18nPublish functions");
   });
 }
@@ -491,7 +490,6 @@ if (Meteor.isServer) {
 if (Meteor.isClient) {
   document.title = "UnitTest: illuminist-i18n-db used in a tap-i18n enabled project";
   var supportedLanguages = Meteor.settings.public.supportedLanguages;
-  var max_document_id = share.max_document_id;
 
   const get_general_classed_collections = (class_suffix) => {
     if (class_suffix == null) {
@@ -504,22 +502,22 @@ if (Meteor.isClient) {
       }), {});
     };
     var collections_docs = [
-      remap_results(test_collections["a" + class_suffix].find({}, {
+      remap_results(testCollections["a" + class_suffix].find({}, {
         sort: {
           "id": 1
         }
-      }).fetch()), remap_results(test_collections["b" + class_suffix].find({}, {
+      }).fetch()), remap_results(testCollections["b" + class_suffix].find({}, {
         sort: {
           "id": 1
         }
-      }).fetch()), remap_results(test_collections["c" + class_suffix].find({}, {
+      }).fetch()), remap_results(testCollections["c" + class_suffix].find({}, {
         sort: {
           "id": 1
         }
       }).fetch())
     ];
     var docs = [];
-    _.times(max_document_id,(i)=>{
+    _.times(maxDocumentId,(i)=>{
       if (i in collections_docs[i % 3]) {
         if (collections_docs[i % 3][i] != null) {
           docs.push(collections_docs[i % 3][i]);
@@ -644,9 +642,9 @@ if (Meteor.isClient) {
     var current_language = Meteor.i18n.getLanguage();
     var i18n_supported = current_language != null;
     var base_language_by_collection_type = {
-      basic: test_collections.a._base_language,
-      regular_lang: test_collections.a_aa._base_language,
-      dialect: test_collections["a_aa-AA"]._base_language,
+      basic: testCollections.a._base_language,
+      regular_lang: testCollections.a_aa._base_language,
+      dialect: testCollections["a_aa-AA"]._base_language,
     };
     _.each(_.keys(base_language_by_collection_type), (collection_type) => {
       var collection_base_language = base_language_by_collection_type[collection_type];
@@ -657,7 +655,7 @@ if (Meteor.isClient) {
           if (_.isNull(should_translate_to)) {
             should_translate_to = collection_base_language;
           }
-          var should_translate_to_dialect_of = share.dialectOf(should_translate_to);
+          var should_translate_to_dialect_of = dialectOf(should_translate_to);
           var property = "not_translated_to_" + language_property_not_translated_to;
           var value = doc[property];
           var expected_value;
@@ -686,9 +684,9 @@ if (Meteor.isClient) {
     var current_language = Meteor.i18n.getLanguage();
     var i18n_supported = current_language != null;
     var base_language_by_collection_type = {
-      basic: test_collections.a._base_language,
-      //regular_lang: test_collections.a_aa._base_language,
-      //dialect: test_collections["a_aa-AA"]._base_language,
+      basic: testCollections.a._base_language,
+      //regular_lang: testCollections.a_aa._base_language,
+      //dialect: testCollections["a_aa-AA"]._base_language,
     };
     _.each(_.keys(base_language_by_collection_type), (collection_type) => {
       var collection_base_language = base_language_by_collection_type[collection_type];
@@ -711,7 +709,7 @@ if (Meteor.isClient) {
           if (should_translate_to === null) {
             should_translate_to = collection_base_language;
           }
-          var should_translate_to_dialect_of = share.dialectOf(should_translate_to);
+          var should_translate_to_dialect_of = dialectOf(should_translate_to);
           var property = "not_translated_to_" + language_property_not_translated_to;
           var expected_value;
           var value = doc[property];
@@ -739,7 +737,7 @@ if (Meteor.isClient) {
   };
 
   const general_tests = (test, subscriptions, documents) => {
-    test.equal(documents.all.length, max_document_id * 3, "Expected documents count in collections");
+    test.equal(documents.all.length, maxDocumentId * 3, "Expected documents count in collections");
     return test.isTrue(_.reduce(_.map(documents.all, (doc) => {
       return doc.i18n == null;
     }), ((memo, current) => {
@@ -884,11 +882,11 @@ if (Meteor.isClient) {
     var documents = null;
     const comp = Deps.autorun(() => {
       documents = get_all_docs();
-      return last_invalidation = share.now();
+      return last_invalidation = now();
     });
     var interval_handle;
     return interval_handle = Meteor.setInterval((() => {
-      if (last_invalidation + idle_time < share.now()) {
+      if (last_invalidation + idle_time < now()) {
         console.log("Testing simple subscriptions' reactivity: language=" + (Meteor.i18n.getLanguage()));
         general_tests(test, subscriptions, documents);
         validate_simple_subscriptions_documents(test, subscriptions, documents);
@@ -981,11 +979,11 @@ if (Meteor.isClient) {
       var documents = null;
       var comp = Deps.autorun(() => {
         documents = get_all_docs();
-        return last_invalidation = share.now();
+        return last_invalidation = now();
       });
       var s = [];
       var interval_handle = Meteor.setInterval((() => {
-        if (last_invalidation + idle_time < share.now()) {
+        if (last_invalidation + idle_time < now()) {
           console.log(`Testing complex subscriptions' reactivity: language=${Meteor.i18n.getLanguage()}; field_to_exclude=${local_session.get("field_to_exclude")}; projection_type=${local_session.get("projection_type") ? "inclusive" : "exclusive"}; projection=${EJSON.stringify(fields)}`);
           s.push({
             projection_type:local_session.get("projection_type"),
@@ -1012,7 +1010,7 @@ if (Meteor.isClient) {
   Tinytest.addAsync('illuminist-i18n-db - translations editing - insertLanguage - language_tag=Meteor.i18n.getLanguage()', (test, onComplete) => {
     Meteor.i18n.setLanguage("aa");
     var _id;
-    return test.equal(translations_editing_tests_collection.findOne(_id = translations_editing_tests_collection.insertLanguage({
+    return test.equal(translationsEditingTestsCollection.findOne(_id = translationsEditingTestsCollection.insertLanguage({
       a: 1,
       b: 5
     }, {
@@ -1039,7 +1037,7 @@ if (Meteor.isClient) {
   Tinytest.addAsync('illuminist-i18n-db - translations editing - translate - language_tag=Meteor.i18n.getLanguage()', (test, onComplete) => {
     Meteor.i18n.setLanguage("aa");
     var result;
-    var _id = translations_editing_tests_collection.insertTranslations({
+    var _id = translationsEditingTestsCollection.insertTranslations({
       a: 5,
       b: 2
     }, {
@@ -1048,23 +1046,23 @@ if (Meteor.isClient) {
         y: 2
       }
     });
-    result = translations_editing_tests_collection.translate(_id, {
+    result = translationsEditingTestsCollection.translate(_id, {
       a: 1,
       c: 3
     });
     test.equal(result, 1, "Correct number of affected documents");
-    result = translations_editing_tests_collection.translate(_id, {
+    result = translationsEditingTestsCollection.translate(_id, {
       x: 1,
       z: 3
     }, {});
     test.equal(result, 1, "Correct number of affected documents");
-    translations_editing_tests_collection.translate(_id, {
+    translationsEditingTestsCollection.translate(_id, {
       l: 1,
       m: 2
     }, (err, affected_rows) => {
       Meteor.setTimeout((() => {
         test.equal(1, affected_rows);
-        test.equal(translations_editing_tests_collection.findOne(_id, {
+        test.equal(translationsEditingTestsCollection.findOne(_id, {
           transform: null
         }), {
           a: 5,
@@ -1089,7 +1087,7 @@ if (Meteor.isClient) {
   Tinytest.addAsync('illuminist-i18n-db - translations editing - removeLanguage - language_tag=Meteor.i18n.getLanguage()', (test, onComplete) => {
     Meteor.i18n.setLanguage("aa");
     var result;
-    var _id = translations_editing_tests_collection.insertTranslations({
+    var _id = translationsEditingTestsCollection.insertTranslations({
       a: 5,
       b: 2
     }, {
@@ -1102,14 +1100,14 @@ if (Meteor.isClient) {
         z: 1
       }
     });
-    result = translations_editing_tests_collection.removeLanguage(_id, ["x", "y"]);
+    result = translationsEditingTestsCollection.removeLanguage(_id, ["x", "y"]);
     test.equal(result, 1, "Correct number of affected documents");
-    result = translations_editing_tests_collection.removeLanguage(_id, ["y", "z"], {});
+    result = translationsEditingTestsCollection.removeLanguage(_id, ["y", "z"], {});
     test.equal(result, 1, "Correct number of affected documents");
-    return result = translations_editing_tests_collection.removeLanguage(_id, ["u", "v"], (err, affected_rows) => {
+    return result = translationsEditingTestsCollection.removeLanguage(_id, ["u", "v"], (err, affected_rows) => {
       return Meteor.setTimeout((() => {
         test.equal(1, affected_rows);
-        test.equal(translations_editing_tests_collection.findOne(_id, {
+        test.equal(translationsEditingTestsCollection.findOne(_id, {
           transform: null
         }), {
           a: 5,
@@ -1128,7 +1126,7 @@ if (Meteor.isClient) {
   Tinytest.addAsync('illuminist-i18n-db - translations editing - removeLanguage - complete remove - language_tag=Meteor.i18n.getLanguage()', (test, onComplete) => {
     Meteor.i18n.setLanguage("aa");
     var result;
-    var _id = translations_editing_tests_collection.insertTranslations({
+    var _id = translationsEditingTestsCollection.insertTranslations({
       a: 5,
       b: 2
     }, {
@@ -1141,10 +1139,10 @@ if (Meteor.isClient) {
         z: 1
       }
     });
-    return result = translations_editing_tests_collection.removeLanguage(_id, null, (err, affected_rows) => {
+    return result = translationsEditingTestsCollection.removeLanguage(_id, null, (err, affected_rows) => {
       return Meteor.setTimeout((() => {
         test.equal(1, affected_rows);
-        test.equal(translations_editing_tests_collection.findOne(_id, {
+        test.equal(translationsEditingTestsCollection.findOne(_id, {
           transform: null
         }), {
           a: 5,
@@ -1159,7 +1157,7 @@ if (Meteor.isClient) {
   Tinytest.addAsync('illuminist-i18n-db - translations editing - removeLanguage - attempt complete remove base language - language_tag=Meteor.i18n.getLanguage()', (test, onComplete) => {
     Meteor.i18n.setLanguage("en"); // Collection base language is a fallback language : 'en'
     var result;
-    var _id = translations_editing_tests_collection.insertTranslations({
+    var _id = translationsEditingTestsCollection.insertTranslations({
       a: 5,
       b: 2
     }, {
@@ -1172,7 +1170,7 @@ if (Meteor.isClient) {
         z: 1
       }
     });
-    return result = translations_editing_tests_collection.removeLanguage(_id, null, (err, affected_rows) => {
+    return result = translationsEditingTestsCollection.removeLanguage(_id, null, (err, affected_rows) => {
       return Meteor.setTimeout((() => {
         test.isUndefined(affected_rows);
         test.instanceOf(err, Meteor.Error);

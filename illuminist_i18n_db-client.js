@@ -1,6 +1,7 @@
-const removeTrailingUndefs = share.helpers.removeTrailingUndefs;
-window._ = _
-share.i18nCollectionTransform = function(doc, collection) {
+import globals from './globals';
+import { dialectOf, removeTrailingUndefs, commonCollectionExtensions } from './illuminist_i18n_db-common';
+
+export const i18nCollectionTransform = function(doc, collection) {
   if (_.some(collection._disabledOnRoutes, route => route.test(window.location.pathname))){
     return doc;
   }
@@ -11,7 +12,7 @@ share.i18nCollectionTransform = function(doc, collection) {
     delete doc.i18n;
     return doc;
   }
-  const dialect_of = share.helpers.dialectOf(language);
+  const dialect_of = dialectOf(language);
   doc = {...doc}; // protect original object
 
   const transformObject = doc => {
@@ -56,7 +57,7 @@ share.i18nCollectionTransform = function(doc, collection) {
   return transformObject(doc);
 };
 
-share.i18nCollectionExtensions = function(obj) {
+export const i18nCollectionExtensions = function(obj) {
   const original = {
     find: obj.find,
     findOne: obj.findOne
@@ -189,3 +190,24 @@ Meteor.i18n = (() => {
     getLanguage
   };
 })();
+
+export const i18nCollection = function(name, options = {}) {
+  var collection, original_transform;
+  // Set the transform option
+
+  original_transform = options.transform || function(doc) {
+    return doc;
+  };
+  options.transform = function(doc) {
+    return i18nCollectionTransform(original_transform(doc), collection);
+  };
+
+  collection = i18nCollectionExtensions(commonCollectionExtensions(new Meteor.Collection(name, options)));
+
+  if (Package["yogiben:admin"] != null) {
+    collection._disableTransformationOnRoute(/^\/admin(\/?$|\/)/);
+  }
+
+  collection._base_language = "base_language" in options ? options["base_language"] : globals.fallback_language;
+  return collection;
+};
