@@ -1,3 +1,5 @@
+import _ from 'lodash';
+import { Tracker } from 'meteor/tracker'
 import globals from './globals';
 import { dialectOf, removeTrailingUndefs, commonCollectionExtensions } from './illuminist_i18n_db-common';
 
@@ -73,7 +75,7 @@ export const i18nCollectionExtensions = function(obj) {
     fn(method);
   }
   obj.forceLangSwitchReactivity = _.once(function() {
-    Deps.autorun(function() {
+    Tracker.autorun(function() {
       return local_session.set("force_lang_switch_reactivity_hook", Meteor.i18n.getLanguage());
     });
   });
@@ -126,7 +128,7 @@ Meteor.i18nSubscribe = function(name) {
   const subscribe = function() {
     // subscription_computation, depends on Meteor.i18n.getLanguage(), to
     // resubscribe once the language gets changed.
-    return subscription_computation = Deps.autorun(function() {
+    return subscription_computation = Tracker.autorun(function() {
       var lang_tag;
       lang_tag = Meteor.i18n.getLanguage();
       subscription = Meteor.subscribe.apply(this, removeTrailingUndefs([].concat(name, params, lang_tag, callbacks)));
@@ -138,16 +140,16 @@ Meteor.i18nSubscribe = function(name) {
   // behavior (which never gets invalidated), we don't want the computation to
   // get invalidated when TAPi18n.getLanguage get invalidated (when language get
   // changed).
-  var currentComputation = Deps.currentComputation;
-  if (typeof currentComputation !== "undefined" && currentComputation !== null) {
+  var currentComputation = Tracker.currentComputation;
+  if (!_.isNil(currentComputation)) {
     // If TAPi18n.subscribe was called in a computation, call subscribe in a
     // non-reactive context, but make sure that if the computation is getting
     // invalidated also the subscription computation 
     // (invalidations are allowed up->bottom but not bottom->up)
-    Deps.onInvalidate(function() {
+    Tracker.onInvalidate(function() {
       return subscription_computation.invalidate();
     });
-    Deps.nonreactive(function() {
+    Tracker.nonreactive(function() {
       return subscribe();
     });
   } else {
@@ -177,17 +179,17 @@ Meteor.i18n = (() => {
   const getLanguage = () => {
     var lang = null;
     try {
-       lang = Session.get(langSessionKey);
+      lang = Session.get(langSessionKey);
     } catch(e) {
 
     } 
 
-    return lang ? lang : globals.fallback_language;
+    return lang || globals.fallback_language;
   }
 
   return {
     setLanguage,
-    getLanguage
+    getLanguage,
   };
 })();
 

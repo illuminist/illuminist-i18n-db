@@ -1,6 +1,7 @@
+import _ from 'lodash';
+import Fiber from 'fibers';
 import globals from './globals';
 import { dialectOf, commonCollectionExtensions } from './illuminist_i18n_db-common';
-const Fiber = Npm.require('fibers');
 
 export const i18nCollectionExtensions = function(obj) {
   obj.i18nFind = function(selector, options) {
@@ -19,7 +20,7 @@ export const i18nCollectionExtensions = function(obj) {
     var collection_base_language = this._base_language;
     var supported_languages = Meteor.settings.public.supportedLanguages;
 
-    if ((current_language != null) && !_.contains(supported_languages, current_language)) {
+    if ((current_language != null) && !_.includes(supported_languages, current_language)) {
       throw new Meteor.Error(400, "Not supported language");
     }
 
@@ -35,7 +36,7 @@ export const i18nCollectionExtensions = function(obj) {
       original_fields[mappedField] = 1; 
     }
 
-    var i18n_fields = _.extend({}, original_fields);
+    var i18n_fields = {...original_fields};
 
     if (!_.isEmpty(i18n_fields)) {
       // determine the projection kind
@@ -43,7 +44,7 @@ export const i18nCollectionExtensions = function(obj) {
       // is not allowed for cursors returned from a publish function
       delete i18n_fields._id;
 
-      var white_list_projection = _.first(_.values(i18n_fields)) === 1;
+      var white_list_projection = _.head(_.values(i18n_fields)) === 1;
 
       if ("_id" in original_fields) {
         i18n_fields["_id"] = original_fields["_id"];

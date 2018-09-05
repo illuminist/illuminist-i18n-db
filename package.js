@@ -8,7 +8,7 @@ Package.describe({
 Package.onUse(function (api) {
   api.versionsFrom('METEOR@1.7.0.4');
 
-  api.use(['ecmascript', 'underscore', 'deps', 'meteor', 'reactive-dict'], ['server', 'client']);
+  api.use(['ecmascript', 'meteor', 'reactive-dict'], ['server', 'client']);
   api.use(['session'], ['client']);
   api.use('autopublish', ['server', 'client'], {weak: true})
 
@@ -16,4 +16,9 @@ Package.onUse(function (api) {
 
   api.mainModule('illuminist_i18n_db-client.js', 'client');
   api.mainModule('illuminist_i18n_db-server.js', 'server');
+});
+
+Npm.depends({
+  fibers: '3.0.0',
+  lodash: '4.17.10',
 });

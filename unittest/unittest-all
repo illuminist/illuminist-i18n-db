@@ -80,8 +80,8 @@ Package.on_test(function (api) {
 
   api.use('illuminist:i18n-db', ['client', 'server']);
 
-  api.add_files('unittest/tests/helpers.js', ['client', 'server']);
-  api.add_files('unittest/tests/common.js', ['client', 'server']);
+  api.addFiles('unittest/tests/helpers.js', ['client', 'server']);
+  api.addFiles('unittest/tests/common.js', ['client', 'server']);
 EOF
 
     for test_name in "$@"; do

@@ -1,10 +1,11 @@
+import _ from 'lodash';
 import globals from './globals';
-import { i18nCollectionExtensions } from './illuminist_i18n_db-client.js';
+import { i18nCollectionExtensions } from './illuminist_i18n_db-client';
 
 globals.supportedLanguages = Meteor.settings.public.supportedLanguages;
 
 export const dialectOf = function(lang) {
-  if ((lang != null) && _.indexOf(lang, "-") >= 0) {
+  if (_.includes(lang, "-")) {
     return lang.replace(/-.*/, "");
   }
   return null;
@@ -40,7 +41,7 @@ export const commonCollectionExtensions = function(obj) {
   };
 
   const isSupportedLanguage = function(lang, attempted_operation, callback) {
-    if (_.contains(Meteor.settings.public.supportedLanguages, lang)) {
+    if (_.includes(Meteor.settings.public.supportedLanguages, lang)) {
       return;
     }
     throwError(new Meteor.Error(400, `Not supported language: ${lang}`), attempted_operation, callback);
@@ -71,8 +72,8 @@ export const commonCollectionExtensions = function(obj) {
     } catch (error1) {
       return null;
     }
-    doc = _.extend({}, doc);
-    translations = _.extend({}, translations);
+    doc = {...doc};
+    translations = {...translations};
     if (translations != null) {
       for (var lang in translations) {
         try {
@@ -119,9 +120,7 @@ export const commonCollectionExtensions = function(obj) {
         if (lang === this._base_language) {
           _.extend(updates, translations[lang]);
         } else {
-          _.extend(updates, _.object(_.map(translations[lang], (val, field) => {
-            return [`i18n.${lang}.${field}`, val];
-          })));
+          _.extend(updates, _.mapKeys(translations[lang], (val, field) => `i18n.${lang}.${field}`));
         }
       }
     }
@@ -161,7 +160,7 @@ export const commonCollectionExtensions = function(obj) {
     var updates = {};
     for (var i = 0; i < fields.length; i++) {
       var field = fields[i];
-      var lang = _.first(field.split("."));
+      var lang = _.head(field.split("."));
       try {
         // make sure all languages are supported
         isSupportedLanguage(lang, "remove translations", callback);
@@ -216,7 +215,7 @@ export const commonCollectionExtensions = function(obj) {
     return this.insertTranslations(doc, _translations, callback);
   };
 
-  obj.updateLanguage = function(selector, translations) {
+  obj.updateLanguage = function(selector, translations, ...params) {
     try {
       verifyI18nEnabled("update", callback);
     } catch (error1) {
@@ -225,8 +224,7 @@ export const commonCollectionExtensions = function(obj) {
     var language_tag = void 0;
     var callback = void 0;
     var options = void 0;
-    var args = _.toArray(arguments);
-    _.each(args.slice(2), arg => {
+    _.each(params, arg => {
       if (_.isFunction(arg)) {
         callback = arg;
       } else if (_.isObject(arg)) {
@@ -249,7 +247,7 @@ export const commonCollectionExtensions = function(obj) {
   // Alias
   obj.translate = obj.updateLanguage;
 
-  obj.removeLanguage = function(selector, fields) {
+  obj.removeLanguage = function(selector, fields, ...params) {
     var _fields_to_remove;
     try {
       verifyI18nEnabled("remove translations", callback);
@@ -259,8 +257,7 @@ export const commonCollectionExtensions = function(obj) {
     var language_tag = void 0;
     var callback = void 0;
     var options = void 0;
-    var args = _.toArray(arguments);
-    _.each(args.slice(2), arg => {
+    _.each(params, arg => {
       if (_.isFunction(arg)) {
         callback = arg;
       } else if (_.isObject(arg)) {
