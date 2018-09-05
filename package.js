@@ -17,20 +17,3 @@ Package.onUse(function (api) {
   api.mainModule('illuminist_i18n_db-client.js', 'client');
   api.mainModule('illuminist_i18n_db-server.js', 'server');
 });
-Package.on_test(function (api) {
-  //
-  // DO NOT ADD THIS Package.on_test TO GIT!!!
-  // DO NOT ADD THIS Package.on_test TO GIT!!!
-  // DO NOT ADD THIS Package.on_test TO GIT!!!
-  //
-
-  api.use(['ecmascript', 'underscore', 'ejson', 'deps', 'tinytest', 'test-helpers', 'templating', 'jquery', 'reactive-dict'], ['client', 'server']);
-  api.use(['session'], ['client']);
-  
-
-  api.use('illuminist:i18n-db', ['client', 'server']);
-
-  api.mainModule('unittest/tests/helpers.js', ['client', 'server']);
-  api.mainModule('unittest/tests/common.js', ['client', 'server']);
-  api.mainModule('unittest/tests/enabled.js', ['client', 'server']);
-});
