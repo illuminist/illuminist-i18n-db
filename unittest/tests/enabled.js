@@ -565,32 +565,23 @@ if (Meteor.isClient) {
 
   const subscribe_simple_subscriptions = () => {
     stop_all_subscriptions();
-    var a_dfd = new $.Deferred();
-    subscription_a = Meteor.i18nSubscribe("class_a", {
-      onReady: (() => {
-        return a_dfd.resolve();
-      }),
-      onError: ((error) => {
-        return a_dfd.reject();
-      })
+    const a_dfd = new Promise((resolve, reject) => {
+      subscription_a = Meteor.i18nSubscribe("class_a", {
+        onReady: resolve,
+        onError: reject,
+      });
     });
-    var b_dfd = new $.Deferred();
-    subscription_b = Meteor.i18nSubscribe("class_b", {
-      onReady: (() => {
-        return b_dfd.resolve();
-      }),
-      onError: ((error) => {
-        return b_dfd.reject();
-      })
+    const b_dfd = new Promise((resolve, reject) => {
+      subscription_b = Meteor.i18nSubscribe("class_b", {
+        onReady: resolve,
+        onError: reject,
+      });
     });
-    var c_dfd = new $.Deferred();
-    subscription_c = Meteor.i18nSubscribe("class_c", {
-      onReady: (() => {
-        return c_dfd.resolve();
-      }),
-      onError: ((error) => {
-        return c_dfd.reject();
-      })
+    const c_dfd = new Promise((resolve, reject) => {
+      subscription_c = Meteor.i18nSubscribe("class_c", {
+        onReady: resolve,
+        onError: reject,
+      });
     });
     return [[subscription_a, subscription_b, subscription_c], [a_dfd, b_dfd, c_dfd]];
   };
@@ -598,44 +589,42 @@ if (Meteor.isClient) {
   const subscribe_complex_subscriptions = () => {
     stop_all_subscriptions();
     var language_to_exclude_from_class_a_and_b = supportedLanguages[(supportedLanguages.indexOf(Meteor.i18n.getLanguage()) + 1) % supportedLanguages.length];
-    var a_dfd = new $.Deferred();
-    var projection = {
-      _id: 1,
-      id: 1
-    };
-    _.chain(supportedLanguages).filter((o)=>o!==language_to_exclude_from_class_a_and_b).each(
-      (language)=> projection["not_translated_to_" + language] = 1
-    );
-    subscription_a = Meteor.i18nSubscribe("class_a", projection, {
-      onReady: (() => {
-        return a_dfd.resolve();
-      }),
-      onError: ((error) => {
-        return a_dfd.reject();
-      })
+
+    const a_dfd = new Promise((resolve, reject) => {
+      let projection = {
+        _id: 1,
+        id: 1,
+      };
+      _.chain(supportedLanguages)
+        .filter((o)=>o!==language_to_exclude_from_class_a_and_b)
+        .each(language => projection[`not_translated_to_${language}`] = 1)
+      ;
+      subscription_a = Meteor.i18nSubscribe("class_a", projection, {
+        onReady: resolve,
+        onError: reject,
+      });
     });
-    var b_dfd = new $.Deferred();
-    projection = {};
-    projection["not_translated_to_" + language_to_exclude_from_class_a_and_b] = 0;
-    subscription_b = Meteor.i18nSubscribe("class_b", projection, {
-      onReady: (() => {
-        return b_dfd.resolve();
-      }),
-      onError: ((error) => {
-        return b_dfd.reject();
-      })
+
+    const b_dfd = new Promise((resolve, reject) => {
+      let projection = {
+        [`not_translated_to_${language_to_exclude_from_class_a_and_b}`]: 0,
+      };
+      subscription_b = Meteor.i18nSubscribe("class_b", projection, {
+        onReady: resolve,
+        onError: reject,
+      });
     });
-    var c_dfd = new $.Deferred();
-    projection = {};
-    projection["not_translated_to_" + (Meteor.i18n.getLanguage())] = 0;
-    subscription_c = Meteor.i18nSubscribe("class_c", projection, {
-      onReady: (() => {
-        return c_dfd.resolve();
-      }),
-      onError: ((error) => {
-        return c_dfd.reject();
-      })
+
+    const c_dfd = new Promise((resolve, reject) => {
+      let projection = {
+        [`not_translated_to_${Meteor.i18n.getLanguage()}`]: 0,
+      };
+      subscription_c = Meteor.i18nSubscribe("class_c", projection, {
+        onReady: resolve,
+        onError: reject,
+      });
     });
+
     return [[subscription_a, subscription_b, subscription_c], [a_dfd, b_dfd, c_dfd]];
   };
 
@@ -855,22 +844,19 @@ if (Meteor.isClient) {
     });
   }
   Tinytest.addAsync('illuminist-i18n-db - subscribing with a not-supported language fails', (test, onComplete) => {
-    var dfd = new $.Deferred();
-    Meteor.subscribe("class_a", "gg-GG", {
-      onReady: () => {
-        return dfd.reject();
-      },
-      onError: (e) => {
+    const dfd = new Promise((resolve, reject) => {
+      Meteor.subscribe("class_a", "gg-GG", {
+        onReady: resolve,
+        onError: reject,
+      });
+    });
+    dfd.then(
+      () => test.fail("Subscriptions that should have failed succeeded"),
+      (e) => {
         test.equal(e.error, 400);
         test.equal(e.reason, "Not supported language");
-        return dfd.resolve(e);
-      }
-    });
-    return dfd.fail(() => {
-      return test.fail("Subscriptions that should have failed succeeded");
-    }).always(() => {
-      return onComplete();
-    });
+      },
+    ).finally(onComplete);
   });
   Tinytest.addAsync('illuminist-i18n-db - reactivity test - simple subscription', (test, onComplete) => {
     Meteor.i18n.setLanguage(supportedLanguages[0]);
@@ -944,33 +930,28 @@ if (Meteor.isClient) {
           });
           fields["id"] = 1;
         }
-        const a_dfd = new $.Deferred();
-        subscription_a = Meteor.i18nSubscribe("class_a", fields, {
-          onReady: (() => {
-            return a_dfd.resolve();
-          }),
-          onError: ((error) => {
-            return a_dfd.reject();
-          })
+        
+        const a_dfd = new Promise((resolve, reject) => {
+          subscription_a = Meteor.i18nSubscribe("class_a", fields, {
+            onReady: resolve,
+            onError: reject,
+          });
         });
-        const b_dfd = new $.Deferred();
-        subscription_b = Meteor.i18nSubscribe("class_b", fields, {
-          onReady: (() => {
-            return b_dfd.resolve();
-          }),
-          onError: ((error) => {
-            return b_dfd.reject();
-          })
+
+        const b_dfd = new Promise((resolve, reject) => {
+          subscription_b = Meteor.i18nSubscribe("class_b", fields, {
+            onReady: resolve,
+            onError: reject,
+          });
         });
-        const c_dfd = new $.Deferred();
-        subscription_c = Meteor.i18nSubscribe("class_c", fields, {
-          onReady: (() => {
-            return c_dfd.resolve();
-          }),
-          onError: ((error) => {
-            return c_dfd.reject();
-          })
+
+        const c_dfd = new Promise((resolve, reject) => {
+          subscription_c = Meteor.i18nSubscribe("class_c", fields, {
+            onReady: resolve,
+            onError: reject,
+          });
         });
+        
         subscriptions = [[subscription_a, subscription_b, subscription_c], [a_dfd, b_dfd, c_dfd]];
       });
 
