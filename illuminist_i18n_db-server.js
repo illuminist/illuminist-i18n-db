@@ -4,37 +4,22 @@ import globals from './globals';
 import { dialectOf, commonCollectionExtensions } from './illuminist_i18n_db-common';
 
 export const i18nCollectionExtensions = function(obj) {
-  obj.i18nFind = function(selector, options) {
-
-    var lang;
+  obj.i18nFind = function(selector = {}, options = {}) {
     var current_language = Fiber.current.language_tag;
 
-    if (typeof current_language === "undefined") {
+    if (_.isUndefined(current_language)) {
       throw new Meteor.Error(500, "i18nCollection.i18nFind should be called only from Meteor.i18nPublish functions");
-    }
-    if (_.isUndefined(selector)) {
-      selector = {};
     }
 
     var dialect_of = dialectOf(current_language);
     var collection_base_language = this._base_language;
     var supported_languages = Meteor.settings.public.supportedLanguages;
 
-    if ((current_language != null) && !_.includes(supported_languages, current_language)) {
+    if (current_language && !_.includes(supported_languages, current_language)) {
       throw new Meteor.Error(400, "Not supported language");
     }
 
-    if (options == null) {
-      options = {};
-    }
-
     var original_fields = options.fields || {};
-
-    if(!_.isUndefined(original_fields) && !_.isObject(original_fields)){
-      var mappedField = original_fields;
-      original_fields = {};
-      original_fields[mappedField] = 1; 
-    }
 
     var i18n_fields = {...original_fields};
 

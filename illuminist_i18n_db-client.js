@@ -89,11 +89,10 @@ export const i18nCollectionExtensions = function(obj) {
   return obj;
 };
 
-Meteor.i18nSubscribe = function(name) {
+Meteor.i18nSubscribe = function(name, ...params) {
   const local_session = new ReactiveDict;
   local_session.set("ready", false);
-  // parse arguments
-  var params = Array.prototype.slice.call(arguments, 1);
+
   var callbacks = {};
   if (params.length) {
     var lastParam = _.last(params);
@@ -138,11 +137,11 @@ Meteor.i18nSubscribe = function(name) {
   };
   // If TAPi18n is called in a computation, to maintain Meteor.subscribe
   // behavior (which never gets invalidated), we don't want the computation to
-  // get invalidated when TAPi18n.getLanguage get invalidated (when language get
+  // get invalidated when Meteor.i18n.getLanguage get invalidated (when language get
   // changed).
   var currentComputation = Tracker.currentComputation;
-  if (!_.isNil(currentComputation)) {
-    // If TAPi18n.subscribe was called in a computation, call subscribe in a
+  if (currentComputation) {
+    // If Meteor.i18nSubscribe was called in a computation, call subscribe in a
     // non-reactive context, but make sure that if the computation is getting
     // invalidated also the subscription computation 
     // (invalidations are allowed up->bottom but not bottom->up)

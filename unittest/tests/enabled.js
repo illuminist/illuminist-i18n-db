@@ -1,3 +1,4 @@
+import { Tracker } from 'meteor/tracker';
 import { testCollections, translationsEditingTestsCollection, maxDocumentId } from './common';
 import { dialectOf, now } from './helpers';
 
@@ -559,7 +560,7 @@ if (Meteor.isClient) {
     _.chain([subscription_a, subscription_b, subscription_c])
       .filter((o)=> !_.isNull(o))
       .each((o)=> o.stop());
-    return Deps.flush();
+    return Tracker.flush();
   };
 
   const subscribe_simple_subscriptions = () => {
@@ -738,11 +739,7 @@ if (Meteor.isClient) {
 
   const general_tests = (test, subscriptions, documents) => {
     test.equal(documents.all.length, maxDocumentId * 3, "Expected documents count in collections");
-    return test.isTrue(_.reduce(_.map(documents.all, (doc) => {
-      return doc.i18n == null;
-    }), ((memo, current) => {
-      return memo && current;
-    }), true), "The subdocument i18n is not part of the documents");
+    test.isTrue(_.every(documents.all, doc => !_.has('i18n')));
   };
 
   const null_language_tests = (test, subscriptions, documents) => {};
@@ -756,7 +753,7 @@ if (Meteor.isClient) {
       validate_simple_subscriptions_documents(test, subscriptions, documents);
       return onComplete();
     });
-    return Deps.autorun(() => {
+    return Tracker.autorun(() => {
       if (subscription_a.ready() && subscription_b.ready() && subscription_c.ready()) {
         return test_case();
       }
@@ -772,7 +769,7 @@ if (Meteor.isClient) {
         validate_complex_subscriptions_documents(test, subscriptions, documents);
         return onComplete();
       });
-      return Deps.autorun(() => {
+      return Tracker.autorun(() => {
         if (subscription_a.ready() && subscription_b.ready() && subscription_c.ready()) {
           return test_case();
         }
@@ -880,7 +877,7 @@ if (Meteor.isClient) {
     const subscriptions = subscribe_simple_subscriptions();
     var last_invalidation = null;
     var documents = null;
-    const comp = Deps.autorun(() => {
+    const comp = Tracker.autorun(() => {
       documents = get_all_docs();
       return last_invalidation = now();
     });
@@ -917,10 +914,10 @@ if (Meteor.isClient) {
             })
           )
         )
-      );
+      );console.log(testCases)
       var local_session = new ReactiveDict();
 
-      const shiftTest = ()=>{
+      const shiftTest = () => {
         var oneTest = testCases.shift()
         if(oneTest){
           local_session.set("field_to_exclude", oneTest.field_to_exclude);
@@ -931,10 +928,11 @@ if (Meteor.isClient) {
       }
       shiftTest();
 
-      var fields = null;
-      var subscriptions = null;
-      Deps.autorun(() => {
-        var field_to_exclude = local_session.get("field_to_exclude");
+      let subscriptions = null;
+      let fields = null;
+
+      Tracker.autorun(() => {
+        const field_to_exclude = local_session.get("field_to_exclude");
         fields = {};
         if (local_session.get("projection_type") === 0) {
           fields[field_to_exclude] = 0;
@@ -946,7 +944,7 @@ if (Meteor.isClient) {
           });
           fields["id"] = 1;
         }
-        var a_dfd = new $.Deferred();
+        const a_dfd = new $.Deferred();
         subscription_a = Meteor.i18nSubscribe("class_a", fields, {
           onReady: (() => {
             return a_dfd.resolve();
@@ -955,7 +953,7 @@ if (Meteor.isClient) {
             return a_dfd.reject();
           })
         });
-        var b_dfd = new $.Deferred();
+        const b_dfd = new $.Deferred();
         subscription_b = Meteor.i18nSubscribe("class_b", fields, {
           onReady: (() => {
             return b_dfd.resolve();
@@ -964,7 +962,7 @@ if (Meteor.isClient) {
             return b_dfd.reject();
           })
         });
-        var c_dfd = new $.Deferred();
+        const c_dfd = new $.Deferred();
         subscription_c = Meteor.i18nSubscribe("class_c", fields, {
           onReady: (() => {
             return c_dfd.resolve();
@@ -973,33 +971,28 @@ if (Meteor.isClient) {
             return c_dfd.reject();
           })
         });
-        return subscriptions = [[subscription_a, subscription_b, subscription_c], [a_dfd, b_dfd, c_dfd]];
+        subscriptions = [[subscription_a, subscription_b, subscription_c], [a_dfd, b_dfd, c_dfd]];
       });
-      var last_invalidation = null;
-      var documents = null;
-      var comp = Deps.autorun(() => {
+
+      let last_invalidation = null;
+      let documents = null;
+      let comp = Tracker.autorun(() => {
         documents = get_all_docs();
-        return last_invalidation = now();
+        last_invalidation = now();
       });
-      var s = [];
-      var interval_handle = Meteor.setInterval((() => {
-        if (last_invalidation + idle_time < now()) {
-          console.log(`Testing complex subscriptions' reactivity: language=${Meteor.i18n.getLanguage()}; field_to_exclude=${local_session.get("field_to_exclude")}; projection_type=${local_session.get("projection_type") ? "inclusive" : "exclusive"}; projection=${EJSON.stringify(fields)}`);
-          s.push({
-            projection_type:local_session.get("projection_type"),
-            field_to_exclude:local_session.get("field_to_exclude"),
-            language:Meteor.i18n.getLanguage(),
-          })
-        }
-        general_tests(test, subscriptions, documents);
-        documents.all.forEach((doc) => {
-          test.isUndefined(doc[local_session.get("field_to_exclude")], `field_to_exclude=${local_session.get("field_to_exclude")}; projection_type=${local_session.get("projection_type") ? "inclusive" : "exclusive"}; projection=${EJSON.stringify(fields)}`);
-        });
-        if (!shiftTest()) {
-          comp.stop();
-          Meteor.clearInterval(interval_handle);
-          console.log(s)
-          onComplete();
+      let interval_handle = Meteor.setInterval((() => {
+        if (last_invalidation + idle_time <= now()) {
+          console.log(`Testing complex subscriptions' reactivity: language=${Meteor.i18n.getLanguage()}; field_to_exclude=${local_session.get("field_to_exclude")}; projection_type=${local_session.get("projection_type") ? "inclusive" : "exclusive"}; projection=${JSON.stringify(fields)}`);
+
+          general_tests(test, subscriptions, documents);
+          documents.all.forEach((doc) => {
+            test.isUndefined(doc[local_session.get("field_to_exclude")], `${doc[local_session.get("field_to_exclude")]};; language=${Meteor.i18n.getLanguage()}; field_to_exclude=${local_session.get("field_to_exclude")}; projection_type=${local_session.get("projection_type") ? "inclusive" : "exclusive"}; projection=${JSON.stringify(fields)}`);
+          });
+          if (!shiftTest()) {
+            comp.stop();
+            Meteor.clearInterval(interval_handle);
+            onComplete();
+          }
         }
       }), idle_time);
     });

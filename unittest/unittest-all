@@ -48,9 +48,9 @@ meteor_unittests_end () {
 
 remove_package_js_test_section () {
     if [[ "$UNAME" == "Darwin" ]]; then
-        sed -i '' '/Package.on_test/,/});/d' package.js
+        sed -i '' '/Package.onTest/,/});/d' package.js
     elif [[ "$UNAME" == "Linux" ]]; then
-        sed -i '/Package.on_test/,/});/d' package.js
+        sed -i '/Package.onTest/,/});/d' package.js
     fi
 }
 
@@ -67,14 +67,14 @@ add_package_js_test_section () {
     remove_package_js_test_section
 
     cat <<EOF >> package.js
-Package.on_test(function (api) {
+Package.onTest(function (api) {
   //
-  // DO NOT ADD THIS Package.on_test TO GIT!!!
-  // DO NOT ADD THIS Package.on_test TO GIT!!!
-  // DO NOT ADD THIS Package.on_test TO GIT!!!
+  // DO NOT ADD THIS Package.onTest TO GIT!!!
+  // DO NOT ADD THIS Package.onTest TO GIT!!!
+  // DO NOT ADD THIS Package.onTest TO GIT!!!
   //
 
-  api.use(['ecmascript', 'underscore', 'ejson', 'deps', 'tinytest', 'test-helpers', 'templating', 'jquery', 'reactive-dict'], ['client', 'server']);
+  api.use(['ecmascript', 'underscore', 'tinytest', 'test-helpers', 'templating', 'jquery', 'reactive-dict'], ['client', 'server']);
   api.use(['session'], ['client']);
   $test_specific
 
@@ -85,7 +85,7 @@ Package.on_test(function (api) {
 EOF
 
     for test_name in "$@"; do
-        echo "api.add_files('unittest/tests/$test_name.js', ['client', 'server']);" >> package.js
+        echo "  api.addFiles('unittest/tests/$test_name.js', ['client', 'server']);" >> package.js
     done
 
     echo "});" >> package.js
